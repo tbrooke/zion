@@ -2,16 +2,6 @@
 
 (def ? {:optional true})
 
-(def item-kinds
-  {1 :item.kind/photograph
-   2 :item.kind/bulletin
-   3 :item.kind/newsletter
-   4 :item.kind/letter
-   5 :item.kind/minutes
-   6 :item.kind/program
-   7 :item.kind/document
-   8 :item.kind/other})
-
 (def person-roles
   {1 :item-person.role/depicted
    2 :item-person.role/creator
@@ -22,6 +12,14 @@
 ;; described (a photo, a bulletin issue); a file is a scan or image that
 ;; belongs to it (an item can have many, e.g. each page of a bulletin).
 ;;
+;; Ways to organise items, all many-to-many:
+;; - kind:       editable list of item types (Photograph, Bulletin, ...). One per item.
+;; - collection: named, optionally nested groups. A `category` ("Era", "People",
+;;               "Activity", ...) is free text, so eras like Civil War / WWI are just
+;;               collections with start/end years, as are Pastors or John's River.
+;; - subject:    curated, optionally nested vocabulary terms.
+;; - tag:        free-form keywords.
+;;
 ;; Dates are partial-friendly: date-display is free text ("circa 1950",
 ;; "Summer 1962"); date-start / date-end are YYYYMMDD ints used for sorting and
 ;; range search (a year-only date is 19500101 - 19501231).
@@ -31,25 +29,33 @@
    :user/joined-at    {:type :inst :required true :index true}
    :user/display-name {:type :text}
 
-   :era/id          {:type :uuid :primary-key true}
-   :era/name        {:type :text :required true :unique true}
-   :era/start-year  {:type :int}
-   :era/end-year    {:type :int}
-   :era/description {:type :text}
+   :kind/id          {:type :uuid :primary-key true}
+   :kind/name        {:type :text :required true :unique true}
+   :kind/description {:type :text}
 
    :collection/id          {:type :uuid :primary-key true}
    :collection/name        {:type :text :required true :unique true}
+   :collection/category    {:type :text :index true}
    :collection/description {:type :text}
+   :collection/parent-id   {:type :uuid :ref :collection/id :index true}
+   :collection/start-year  {:type :int}
+   :collection/end-year    {:type :int}
+
+   :subject/id          {:type :uuid :primary-key true}
+   :subject/name        {:type :text :required true :unique true}
+   :subject/description {:type :text}
+   :subject/parent-id   {:type :uuid :ref :subject/id :index true}
+
+   :tag/id   {:type :uuid :primary-key true}
+   :tag/name {:type :text :required true :unique true}
 
    :item/id           {:type :uuid :primary-key true}
-   :item/kind         {:type        :enum      :required true :index true
-                       :enum-values item-kinds}
+   :item/kind-id      {:type :uuid :ref :kind/id :required true :index true}
    :item/title        {:type :text :required true}
    :item/description  {:type :text}
    :item/date-display {:type :text}
    :item/date-start   {:type :int :index true}
    :item/date-end     {:type :int}
-   :item/era-id       {:type :uuid :ref :era/id :index true}
    :item/source       {:type :text}
    :item/rights       {:type :text}
    :item/notes        {:type :text}
@@ -74,7 +80,8 @@
    :item-person/id        {:type :uuid :primary-key true}
    :item-person/item-id   {:type :uuid :ref :item/id :required true :index true}
    :item-person/person-id {:type :uuid :ref :person/id :required true :index true}
-   :item-person/role      {:type        :enum                    :required true
+   :item-person/role      {:type        :enum
+                           :required    true
                            :enum-values person-roles
                            :unique-with [:item-person/item-id
                                          :item-person/person-id]}
@@ -89,7 +96,31 @@
     :ref         :collection/id
     :required    true
     :index       true
-    :unique-with [:item-collection/item-id]}})
+    :unique-with [:item-collection/item-id]}
+
+   :item-subject/id {:type :uuid :primary-key true}
+
+   :item-subject/item-id
+   {:type :uuid :ref :item/id :required true :index true}
+
+   :item-subject/subject-id
+   {:type        :uuid
+    :ref         :subject/id
+    :required    true
+    :index       true
+    :unique-with [:item-subject/item-id]}
+
+   :item-tag/id {:type :uuid :primary-key true}
+
+   :item-tag/item-id
+   {:type :uuid :ref :item/id :required true :index true}
+
+   :item-tag/tag-id
+   {:type        :uuid
+    :ref         :tag/id
+    :required    true
+    :index       true
+    :unique-with [:item-tag/item-id]}})
 
 ;; Strings added here will be appended to resources/schema.sql
 (def extra-init-sql [])

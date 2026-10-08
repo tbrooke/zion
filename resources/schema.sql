@@ -11,16 +11,19 @@ CREATE TABLE biff_sqlite_kv (
 CREATE TABLE collection (
   id BLOB PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
+  category TEXT,
   description TEXT,
+  end_year INT,
+  parent_id BLOB,
+  start_year INT,
+  FOREIGN KEY(parent_id) REFERENCES collection(id),
   UNIQUE(name)
 ) STRICT;
 
-CREATE TABLE era (
+CREATE TABLE kind (
   id BLOB PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
-  end_year INT,
-  start_year INT,
   UNIQUE(name)
 ) STRICT;
 
@@ -28,6 +31,21 @@ CREATE TABLE person (
   id BLOB PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
   notes TEXT
+) STRICT;
+
+CREATE TABLE subject (
+  id BLOB PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  parent_id BLOB,
+  FOREIGN KEY(parent_id) REFERENCES subject(id),
+  UNIQUE(name)
+) STRICT;
+
+CREATE TABLE tag (
+  id BLOB PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  UNIQUE(name)
 ) STRICT;
 
 CREATE TABLE user (
@@ -41,7 +59,7 @@ CREATE TABLE user (
 CREATE TABLE item (
   id BLOB PRIMARY KEY NOT NULL,
   created_at INT NOT NULL,
-  kind INT NOT NULL CHECK (kind IN (1, 2, 3, 4, 5, 6, 7, 8)), -- photograph (1), bulletin (2), newsletter (3), letter (4), minutes (5), program (6), document (7), other (8)
+  kind_id BLOB NOT NULL,
   published INT NOT NULL,
   title TEXT NOT NULL,
   updated_at INT NOT NULL,
@@ -49,11 +67,10 @@ CREATE TABLE item (
   date_end INT,
   date_start INT,
   description TEXT,
-  era_id BLOB,
   notes TEXT,
   rights TEXT,
   source TEXT,
-  FOREIGN KEY(era_id) REFERENCES era(id)
+  FOREIGN KEY(kind_id) REFERENCES kind(id)
 ) STRICT;
 
 CREATE TABLE file (
@@ -89,14 +106,38 @@ CREATE TABLE item_person (
   UNIQUE(role, item_id, person_id)
 ) STRICT;
 
+CREATE TABLE item_subject (
+  id BLOB PRIMARY KEY NOT NULL,
+  item_id BLOB NOT NULL,
+  subject_id BLOB NOT NULL,
+  FOREIGN KEY(item_id) REFERENCES item(id),
+  FOREIGN KEY(subject_id) REFERENCES subject(id),
+  UNIQUE(subject_id, item_id)
+) STRICT;
+
+CREATE TABLE item_tag (
+  id BLOB PRIMARY KEY NOT NULL,
+  item_id BLOB NOT NULL,
+  tag_id BLOB NOT NULL,
+  FOREIGN KEY(item_id) REFERENCES item(id),
+  FOREIGN KEY(tag_id) REFERENCES tag(id),
+  UNIQUE(tag_id, item_id)
+) STRICT;
+
+CREATE INDEX idx_collection_category ON collection(category);
+CREATE INDEX idx_collection_parent_id ON collection(parent_id);
 CREATE INDEX idx_file_item_id ON file(item_id);
 CREATE INDEX idx_file_sha256 ON file(sha256);
 CREATE INDEX idx_item_date_start ON item(date_start);
-CREATE INDEX idx_item_era_id ON item(era_id);
-CREATE INDEX idx_item_kind ON item(kind);
+CREATE INDEX idx_item_kind_id ON item(kind_id);
 CREATE INDEX idx_item_collection_collection_id ON item_collection(collection_id);
 CREATE INDEX idx_item_collection_item_id ON item_collection(item_id);
 CREATE INDEX idx_item_person_item_id ON item_person(item_id);
 CREATE INDEX idx_item_person_person_id ON item_person(person_id);
+CREATE INDEX idx_item_subject_item_id ON item_subject(item_id);
+CREATE INDEX idx_item_subject_subject_id ON item_subject(subject_id);
+CREATE INDEX idx_item_tag_item_id ON item_tag(item_id);
+CREATE INDEX idx_item_tag_tag_id ON item_tag(tag_id);
 CREATE INDEX idx_person_name ON person(name);
+CREATE INDEX idx_subject_parent_id ON subject(parent_id);
 CREATE INDEX idx_user_joined_at ON user(joined_at);
