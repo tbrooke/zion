@@ -7,6 +7,7 @@
             [com.biffweb.ring :as biff.ring]
             [com.mtzcg.history.app.admin :as app.admin]
             [com.mtzcg.history.app.auth :as app.auth]
+            [com.mtzcg.history.app.browse :as app.browse]
             [com.mtzcg.history.app.home :as app.home]
             [com.mtzcg.history.app.items :as app.items]
             [com.mtzcg.history.app.landing :as app.landing]
@@ -30,7 +31,8 @@
    app.landing/module
    app.auth/module
    app.home/module
-   app.items/module])
+   app.items/module
+   app.browse/module])
 
 (def start-order
   [:biff.config/module

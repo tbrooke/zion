@@ -11,3 +11,6 @@
 (defpath item "/admin/items/:id")
 (defpath collections "/admin/collections")
 (defpath file "/admin/files/:id")
+(defpath browse "/admin/browse")
+(defpath searches "/admin/searches")
+(defpath search-delete "/admin/searches/:id/delete")

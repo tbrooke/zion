@@ -14,9 +14,9 @@
 ;;
 ;; Ways to organise items, all many-to-many:
 ;; - item type: editable list (Photograph, Bulletin, Video, ...). One per item.
-;; - collection: named, optionally nested groups. A `category` ("Era", "People",
-;;               "Activity", ...) is free text, so eras like Civil War / WWI are just
-;;               collections with start/end years, as are Pastors or John's River.
+;; - collection: named, optionally nested groups. A `category` ("People", "Activity",
+;;               ...) is free text, e.g. Pastors or John's River. Eras are not
+;;               collections: they are saved date-range searches.
 ;; - subject:    curated, optionally nested vocabulary terms.
 ;; - tag:        free-form keywords.
 ;;
@@ -38,8 +38,15 @@
    :collection/category    {:type :text :index true}
    :collection/description {:type :text}
    :collection/parent-id   {:type :uuid :ref :collection/id :index true}
-   :collection/start-year  {:type :int}
-   :collection/end-year    {:type :int}
+
+   ;; A named, reusable date-range query (e.g. "Civil War" = 18610101..18651231).
+   ;; Replaces era collections: eras are searches over item dates.
+   :saved-search/id          {:type :uuid :primary-key true}
+   :saved-search/name        {:type :text :required true :unique true}
+   :saved-search/description {:type :text}
+   :saved-search/date-from   {:type :int}
+   :saved-search/date-to     {:type :int}
+   :saved-search/created-at  {:type :inst :required true}
 
    :subject/id          {:type :uuid :primary-key true}
    :subject/name        {:type :text :required true :unique true}

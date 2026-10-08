@@ -85,7 +85,7 @@
      [:input {:type        "text"
               :list        "collection-categories"
               :class       ["rounded border border-gray-300 p-2"]
-              :placeholder "Era, People, Activity..."
+              :placeholder "Group, People, Activity..."
               :data-bind   (signal-name :collection/new-category)}]
      [:datalist {:id "collection-categories"}
       (for [cat (->> collections (keep :collection/category) distinct)]

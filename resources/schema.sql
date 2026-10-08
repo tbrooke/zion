@@ -13,14 +13,12 @@ CREATE TABLE collection (
   name TEXT NOT NULL,
   category TEXT,
   description TEXT,
-  end_year INT,
   parent_id BLOB,
-  start_year INT,
   FOREIGN KEY(parent_id) REFERENCES collection(id),
   UNIQUE(name)
 ) STRICT;
 
-CREATE TABLE kind (
+CREATE TABLE item_type (
   id BLOB PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
@@ -31,6 +29,16 @@ CREATE TABLE person (
   id BLOB PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
   notes TEXT
+) STRICT;
+
+CREATE TABLE saved_search (
+  id BLOB PRIMARY KEY NOT NULL,
+  created_at INT NOT NULL,
+  name TEXT NOT NULL,
+  date_from INT,
+  date_to INT,
+  description TEXT,
+  UNIQUE(name)
 ) STRICT;
 
 CREATE TABLE subject (
@@ -59,7 +67,7 @@ CREATE TABLE user (
 CREATE TABLE item (
   id BLOB PRIMARY KEY NOT NULL,
   created_at INT NOT NULL,
-  kind_id BLOB NOT NULL,
+  item_type_id BLOB NOT NULL,
   published INT NOT NULL,
   title TEXT NOT NULL,
   updated_at INT NOT NULL,
@@ -70,7 +78,7 @@ CREATE TABLE item (
   notes TEXT,
   rights TEXT,
   source TEXT,
-  FOREIGN KEY(kind_id) REFERENCES kind(id)
+  FOREIGN KEY(item_type_id) REFERENCES item_type(id)
 ) STRICT;
 
 CREATE TABLE file (
@@ -129,7 +137,7 @@ CREATE INDEX idx_collection_parent_id ON collection(parent_id);
 CREATE INDEX idx_file_item_id ON file(item_id);
 CREATE INDEX idx_file_sha256 ON file(sha256);
 CREATE INDEX idx_item_date_start ON item(date_start);
-CREATE INDEX idx_item_kind_id ON item(kind_id);
+CREATE INDEX idx_item_item_type_id ON item(item_type_id);
 CREATE INDEX idx_item_collection_collection_id ON item_collection(collection_id);
 CREATE INDEX idx_item_collection_item_id ON item_collection(item_id);
 CREATE INDEX idx_item_person_item_id ON item_person(item_id);
