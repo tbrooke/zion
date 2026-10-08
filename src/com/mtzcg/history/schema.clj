@@ -13,7 +13,7 @@
 ;; belongs to it (an item can have many, e.g. each page of a bulletin).
 ;;
 ;; Ways to organise items, all many-to-many:
-;; - kind:       editable list of item types (Photograph, Bulletin, ...). One per item.
+;; - item type: editable list (Photograph, Bulletin, Video, ...). One per item.
 ;; - collection: named, optionally nested groups. A `category` ("Era", "People",
 ;;               "Activity", ...) is free text, so eras like Civil War / WWI are just
 ;;               collections with start/end years, as are Pastors or John's River.
@@ -29,9 +29,9 @@
    :user/joined-at    {:type :inst :required true :index true}
    :user/display-name {:type :text}
 
-   :kind/id          {:type :uuid :primary-key true}
-   :kind/name        {:type :text :required true :unique true}
-   :kind/description {:type :text}
+   :item-type/id          {:type :uuid :primary-key true}
+   :item-type/name        {:type :text :required true :unique true}
+   :item-type/description {:type :text}
 
    :collection/id          {:type :uuid :primary-key true}
    :collection/name        {:type :text :required true :unique true}
@@ -50,7 +50,7 @@
    :tag/name {:type :text :required true :unique true}
 
    :item/id           {:type :uuid :primary-key true}
-   :item/kind-id      {:type :uuid :ref :kind/id :required true :index true}
+   :item/item-type-id {:type :uuid :ref :item-type/id :required true :index true}
    :item/title        {:type :text :required true}
    :item/description  {:type :text}
    :item/date-display {:type :text}

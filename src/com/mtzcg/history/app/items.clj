@@ -10,10 +10,10 @@
 
 ;;;; Queries ===================================================================
 
-(defn- all-kinds [ctx]
-  (biff.sqlite/execute ctx {:select   [:kind/id :kind/name]
-                            :from     :kind
-                            :order-by [:kind/name]}))
+(defn- all-item-types [ctx]
+  (biff.sqlite/execute ctx {:select   [:item-type/id :item-type/name]
+                            :from     :item-type
+                            :order-by [:item-type/name]}))
 
 (defn- all-collections [ctx]
   (biff.sqlite/execute ctx {:select   [:collection/id :collection/name :collection/category]
@@ -65,26 +65,28 @@
    [:div {:class ["flex flex-wrap items-center gap-2"]}
     (for [c collections]
       (collection-chip selected c))
-    [:button {:type            "button"
-              :class           ["rounded-full border border-dashed border-gray-400 px-3 py-1"
-                                "text-sm hover:bg-gray-100"]
-              :title           "New collection"
-              :data-on:click   "$_showAdd = !$_showAdd"}
+    [:button {:type          "button"
+              :class         ["rounded-full border border-dashed border-gray-400 px-3 py-1"
+                              "text-sm hover:bg-gray-100"]
+              :title         "New collection"
+              :data-on:click "$_showAdd = !$_showAdd"}
      "+"]]
-   [:div {:class ["flex flex-wrap items-end gap-2 rounded border border-gray-200 bg-gray-50 p-3"]
+   [:div {:class     ["flex flex-wrap items-end gap-2 rounded border"
+                      "border-gray-200 bg-gray-50 p-3"]
           :data-show "$_showAdd"
-          :style {:display "none"}}
+          :style     {:display "none"}}
     [:label {:class [label-class]}
      "New collection name"
-     [:input {:type "text" :class ["rounded border border-gray-300 p-2"]
+     [:input {:type      "text"
+              :class     ["rounded border border-gray-300 p-2"]
               :data-bind (signal-name :collection/new-name)}]]
     [:label {:class [label-class]}
      "Category"
-     [:input {:type      "text"
-              :list      "collection-categories"
-              :class     ["rounded border border-gray-300 p-2"]
+     [:input {:type        "text"
+              :list        "collection-categories"
+              :class       ["rounded border border-gray-300 p-2"]
               :placeholder "Era, People, Activity..."
-              :data-bind (signal-name :collection/new-category)}]
+              :data-bind   (signal-name :collection/new-category)}]
      [:datalist {:id "collection-categories"}
       (for [cat (->> collections (keep :collection/category) distinct)]
         [:option {:value cat}])]]
@@ -94,7 +96,7 @@
               :data-on:click "@post(el.dataset.action)"}
      "Add collection"]]])
 
-(defn- new-item-form [{:keys [kinds collections selected error]}]
+(defn- new-item-form [{:keys [item-types collections selected error]}]
   [:form {:method  "post"
           :action  (routes/items)
           :enctype "multipart/form-data"
@@ -107,25 +109,25 @@
    [:div {:data-ignore-morph true :class ["flex flex-col gap-5"]}
     [:label {:class [label-class]}
      "Files (scans, photos, video)"
-     [:input {:type "file" :name "files" :multiple true :required true
+     [:input {:type  "file"        :name "files" :multiple true :required true
               :class [input-class]}]]
     [:div {:class ["grid gap-5 sm:grid-cols-2"]}
      [:label {:class [label-class]}
       "Title"
-      [:input {:type "text" :name "title" :class [input-class]
+      [:input {:type        "text"                            :name "title" :class [input-class]
                :placeholder "Defaults to the first file name"}]]
      [:label {:class [label-class]}
-      "Kind"
-      [:select {:name "kind" :class [input-class]}
-       (for [{:kind/keys [id name]} kinds]
+      "Item type"
+      [:select {:name "item_type" :class [input-class]}
+       (for [{:item-type/keys [id name]} item-types]
          [:option {:value (str id)} name])]]
      [:label {:class [label-class]}
       "Date"
-      [:input {:type "text" :name "date" :class [input-class]
+      [:input {:type        "text"                        :name "date" :class [input-class]
                :placeholder "1952, 1952-06 or 1952-06-14"}]]
      [:label {:class [label-class]}
       "Date note"
-      [:input {:type "text" :name "date_note" :class [input-class]
+      [:input {:type        "text"                       :name "date_note" :class [input-class]
                :placeholder "circa 1950, Summer 1962..."}]]]
     [:label {:class [label-class]}
      "Description"
@@ -153,7 +155,7 @@
       [:input {:type "text" :name "tags" :class [input-class]}]]
      [:label {:class [label-class]}
       "Source"
-      [:input {:type "text" :name "source" :class [input-class]
+      [:input {:type        "text"                      :name "source" :class [input-class]
                :placeholder "Where did this come from?"}]]
      [:label {:class [label-class]}
       "Rights"
@@ -166,9 +168,9 @@
      "Published (visible on the public site)"]]
 
    [:div
-    [:button {:type             "submit"
-              :class            ["rounded bg-blue-600 px-4 py-2 text-white"
-                                 "disabled:cursor-not-allowed disabled:opacity-40"]
+    [:button {:type               "submit"
+              :class              ["rounded bg-blue-600 px-4 py-2 text-white"
+                                   "disabled:cursor-not-allowed disabled:opacity-40"]
               :data-attr:disabled "$item_collections.length === 0"}
      "Save item"]]])
 
@@ -178,15 +180,16 @@
      request
      [:main {:id    "new-item-page"
              :class ["mx-auto flex w-full max-w-3xl flex-col gap-6 p-6"]
+
              :data-signals__ifmissing
-             (biff.datastar/signals-json {:item/collections         []
+             (biff.datastar/signals-json {:item/collections        []
                                           :collection/new-name     ""
                                           :collection/new-category ""})}
       [:div {:data-signals__ifmissing "{_showAdd: false}"}
        [:h1 {:class ["text-2xl font-semibold"]} "Add item"]
        [:a {:class ["text-sm text-blue-600 hover:underline"] :href (routes/app)}
         "Back"]]
-      (new-item-form {:kinds       (all-kinds request)
+      (new-item-form {:item-types  (all-item-types request)
                       :collections (all-collections request)
                       :selected    selected
                       :error       (get-in request [:params :error])})])))
@@ -212,7 +215,7 @@
                                                    :collection/name     coll-name
                                                    :collection/category category}]}))
         (biff.datastar/patch-signals
-         {:item/collections         (vec (distinct (conj selected (str id))))
+         {:item/collections        (vec (distinct (conj selected (str id))))
           :collection/new-name     ""
           :collection/new-category ""})))))
 
@@ -254,36 +257,36 @@
   "Stores the uploaded files and writes the item with all its relations.
   Returns the new item id."
   [{:keys [params biff.fx/now] :as ctx}]
-  (let [files        (uploaded-files params)
-        collections  (mapv parse-uuid (->vec (:collection params)))
-        item-id      (random-uuid)
-        now          (or now (java.time.Instant/now))
-        date-str     (blank->nil (:date params))
+  (let [files           (uploaded-files params)
+        collections     (mapv parse-uuid (->vec (:collection params)))
+        item-id         (random-uuid)
+        now             (or now (java.time.Instant/now))
+        date-str        (blank->nil (:date params))
         [d-start d-end] (dates/parse-partial-date date-str)
-        store        (storage/storage ctx)
-        stored       (map-indexed
-                      (fn [i {:keys [tempfile filename content-type]}]
-                        (assoc (storage/store-file!
-                                store tempfile
-                                {:original-name filename
-                                 :mime-type     (when-not (str/blank? content-type)
-                                                  content-type)})
-                               :file/item-id item-id
-                               :file/position i
-                               :file/created-at now))
-                      files)
-        people       (name-statements ctx :person (split-names (:people params)))
-        subjects     (name-statements ctx :subject (split-names (:subjects params)))
-        tags         (name-statements ctx :tag (split-names (:tags params)))
-        title        (or (blank->nil (:title params))
-                         (:file/original-name (first stored))
-                         "Untitled")]
+        store           (storage/storage ctx)
+        stored          (map-indexed
+                         (fn [i {:keys [tempfile filename content-type]}]
+                           (assoc (storage/store-file!
+                                   store tempfile
+                                   {:original-name filename
+                                    :mime-type     (when-not (str/blank? content-type)
+                                                     content-type)})
+                                  :file/item-id item-id
+                                  :file/position i
+                                  :file/created-at now))
+                         files)
+        people          (name-statements ctx :person (split-names (:people params)))
+        subjects        (name-statements ctx :subject (split-names (:subjects params)))
+        tags            (name-statements ctx :tag (split-names (:tags params)))
+        title           (or (blank->nil (:title params))
+                            (:file/original-name (first stored))
+                            "Untitled")]
     (biff.sqlite/execute-tx
      ctx
      (concat
       [{:insert-into :item
         :values      [{:item/id           item-id
-                       :item/kind-id      (parse-uuid (:kind params))
+                       :item/item-type-id (parse-uuid (:item_type params))
                        :item/title        title
                        :item/description  (blank->nil (:description params))
                        :item/date-display (or (blank->nil (:date_note params)) date-str)
@@ -299,7 +302,8 @@
       (:stmts people) (:stmts subjects) (:stmts tags)
       (link-statements :item-collection item-id :item-collection/collection-id collections)
       (link-statements :item-person item-id :item-person/person-id (:ids people)
-                       {:item-person/role [:lift (get roles (:role params) :item-person.role/depicted)]})
+                       {:item-person/role
+                        [:lift (get roles (:role params) :item-person.role/depicted)]})
       (link-statements :item-subject item-id :item-subject/subject-id (:ids subjects))
       (link-statements :item-tag item-id :item-tag/tag-id (:ids tags))))
     item-id))
@@ -320,9 +324,9 @@
 
 (defn- item-details [ctx item-id]
   (let [item        (first (biff.sqlite/execute
-                            ctx {:select [:item/* [:kind/name :kind-name]]
+                            ctx {:select [:item/* [:item-type/name :item-type-name]]
                                  :from   :item
-                                 :join   [:kind [:= :kind/id :item/kind-id]]
+                                 :join   [:item-type [:= :item-type/id :item/item-type-id]]
                                  :where  [:= :item/id item-id]}))
         files       (biff.sqlite/execute ctx {:select   [:file/id :file/mime-type
                                                          :file/original-name]
@@ -356,7 +360,7 @@
      [:main {:id "item-page" :class ["mx-auto flex w-full max-w-3xl flex-col gap-4 p-6"]}
       [:h1 {:class ["text-2xl font-semibold"]} (:item/title item)]
       [:p {:class ["text-sm text-gray-600"]}
-       (:kind-name item)
+       (:item-type-name item)
        (when-some [d (:item/date-display item)] (str " · " d))
        (if (:item/published item) " · Published" " · Draft")]
       [:div {:class ["flex flex-wrap gap-2"]}
