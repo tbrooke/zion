@@ -30,6 +30,8 @@
  :biff.tasks/main-ns    com.mtzcg.history
  :biff.tasks/nrepl-port #long #or [#biff/env NREPL_PORT "7888"]
 
+ :history.storage/root #or [#biff/env STORAGE_ROOT "storage/files"]
+
  :mailersend/api-key   #biff/secret MAILERSEND_API_KEY
  :mailersend/from      #biff/env MAILERSEND_FROM
  :mailersend/from-name "My Application"
