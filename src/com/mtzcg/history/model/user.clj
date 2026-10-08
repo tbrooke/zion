@@ -1,4 +1,4 @@
-(ns com.example.model.user
+(ns com.mtzcg.history.model.user
   (:require [com.biffweb.graph :refer [defresolver]]))
 
 (defresolver session-user

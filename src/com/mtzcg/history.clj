@@ -1,7 +1,7 @@
-(ns com.example
+(ns com.mtzcg.history
   (:require [com.biffweb.core :as biff.core]
             [com.biffweb.datastar :refer [disconnect]]
-            [com.example.modules :refer [modules start-order]]
+            [com.mtzcg.history.modules :refer [modules start-order]]
             [nrepl.cmdline :as nrepl])
   (:gen-class))
 

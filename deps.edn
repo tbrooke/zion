@@ -13,7 +13,7 @@
  {:prod {:jvm-opts  ["-Djdk.attach.allowAttachSelf"
                      "-XX:-OmitStackTraceInFastThrow"
                      "-XX:+CrashOnOutOfMemoryError"]
-         :main-opts ["-m" "com.example"]}
+         :main-opts ["-m" "com.mtzcg.history"]}
   :run  {:extra-paths ["test"]
          :extra-deps  {com.biffweb/tasks {:mvn/version "2.0.2"}}
          :main-opts   ["-m" "com.biffweb.tasks.app"]}}}

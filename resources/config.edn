@@ -27,7 +27,7 @@
   {:src "config.prod.env" :dest "config.env"}]
 
  :biff.tasks/domain     #biff/env DOMAIN
- :biff.tasks/main-ns    com.example
+ :biff.tasks/main-ns    com.mtzcg.history
  :biff.tasks/nrepl-port #long #or [#biff/env NREPL_PORT "7888"]
 
  :mailersend/api-key   #biff/secret MAILERSEND_API_KEY

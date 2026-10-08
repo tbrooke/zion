@@ -1,4 +1,4 @@
-(ns com.example.routes
+(ns com.mtzcg.history.routes
   (:require [com.biffweb.ring :refer [defpath]]))
 
 (defpath home "/")

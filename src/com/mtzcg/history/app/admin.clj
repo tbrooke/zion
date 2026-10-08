@@ -1,8 +1,8 @@
-(ns com.example.app.admin
+(ns com.mtzcg.history.app.admin
   (:require [clojure.set :as set]
             [com.biffweb.admin :as biff.admin]
             [com.biffweb.sqlite :as biff.sqlite]
-            [com.example.lib.email :as lib.email]))
+            [com.mtzcg.history.lib.email :as lib.email]))
 
 (defn- get-users [ctx]
   (->> (biff.sqlite/execute ctx {:select   [:user/id

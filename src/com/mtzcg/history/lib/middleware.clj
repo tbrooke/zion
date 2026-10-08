@@ -1,5 +1,5 @@
-(ns com.example.lib.middleware
-  (:require [com.example.routes :as routes]))
+(ns com.mtzcg.history.lib.middleware
+  (:require [com.mtzcg.history.routes :as routes]))
 
 (defn wrap-signed-in [handler]
   (fn [{:keys [session] :as ctx}]

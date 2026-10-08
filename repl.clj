@@ -2,7 +2,7 @@
 (ns repl
   (:require [clojure.tools.namespace.repl :as tn-repl]
             [com.biffweb.sqlite :refer [execute]]
-            [com.example :as main]))
+            [com.mtzcg.history :as main]))
 
 (defn get-ctx []
   @main/system)

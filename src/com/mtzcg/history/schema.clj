@@ -1,16 +1,9 @@
-(ns com.example.schema)
+(ns com.mtzcg.history.schema)
 
 (def ? {:optional true})
 
-(def tab-state-schema
-  [:map
-   [:tab/background-color ? [:enum :white :red :blue :green]]])
-
 (def columns
-  {:tab-state/id   {:type :uuid :primary-key true}
-   :tab-state/data {:type :edn :extra-schema tab-state-schema}
-
-   :user/id           {:type :uuid :primary-key true}
+  {:user/id           {:type :uuid :primary-key true}
    :user/email        {:type :text :required true :unique true}
    :user/joined-at    {:type :inst :required true :index true}
    :user/display-name {:type :text}})
@@ -25,8 +18,7 @@
   (= (apply dissoc before fields)
      (apply dissoc after fields)))
 
-(defn authorize-entry [{{:keys [uid]} :session
-                        :keys         [biff.datastar/tab-id]}
+(defn authorize-entry [{{:keys [uid]} :session}
                        {:keys [table op before after]}]
   (case table
     :user
@@ -35,9 +27,6 @@
            :create false
            :update (only-fields-edited? before after editable-user-fields)
            :delete true))
-
-    :tab-state
-    (every? #{tab-id} (keep :tab-state/id [before after]))
 
     false))
 

@@ -1,6 +1,6 @@
-(ns com.example.model.sqlite
+(ns com.mtzcg.history.model.sqlite
   (:require [com.biffweb.sqlite :as biff.sqlite]
-            [com.example.schema :as schema]))
+            [com.mtzcg.history.schema :as schema]))
 
 (def module
   (biff.sqlite/module

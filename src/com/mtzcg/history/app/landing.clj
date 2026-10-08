@@ -1,7 +1,7 @@
-(ns com.example.app.landing
-  (:require [com.example.lib.middleware :as mid]
-            [com.example.lib.ui :as ui]
-            [com.example.routes :as routes]))
+(ns com.mtzcg.history.app.landing
+  (:require [com.mtzcg.history.lib.middleware :as mid]
+            [com.mtzcg.history.lib.ui :as ui]
+            [com.mtzcg.history.routes :as routes]))
 
 (defn home [_]
   (ui/page

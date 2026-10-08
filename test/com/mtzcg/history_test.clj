@@ -1,4 +1,4 @@
-(ns com.example-test
+(ns com.mtzcg.history-test
   (:require [clojure.test :refer [deftest is]]))
 
 (deftest plus

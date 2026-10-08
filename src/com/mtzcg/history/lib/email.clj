@@ -1,4 +1,4 @@
-(ns com.example.lib.email
+(ns com.mtzcg.history.lib.email
   (:require [clojure.tools.logging :as log]
             [hato.client :as hato]))
 

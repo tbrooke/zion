@@ -1,8 +1,8 @@
-(ns com.example.app.auth
+(ns com.mtzcg.history.app.auth
   (:require [com.biffweb.authenticate :as biff.auth]
             [com.biffweb.fx :as fx :refer [defpipeline]]
-            [com.example.lib.email :as email]
-            [com.example.routes :as routes]))
+            [com.mtzcg.history.lib.email :as email]
+            [com.mtzcg.history.routes :as routes]))
 
 (defpipeline get-user-id
   (fn [_ctx email]

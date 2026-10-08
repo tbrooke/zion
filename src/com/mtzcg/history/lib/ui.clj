@@ -1,4 +1,4 @@
-(ns com.example.lib.ui
+(ns com.mtzcg.history.lib.ui
   (:require [clojure.java.io :as io]
             [dev.onionpancakes.chassis.core :as chassis]
             [com.biffweb.datastar :as biff.datastar]
