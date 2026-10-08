@@ -6,3 +6,8 @@
 (defpath admin "/_biff/admin")
 (defpath signin "/signin")
 (defpath signout "/_biff/auth/signout")
+(defpath item-new "/admin/new-item")
+(defpath items "/admin/items")
+(defpath item "/admin/items/:id")
+(defpath collections "/admin/collections")
+(defpath file "/admin/files/:id")

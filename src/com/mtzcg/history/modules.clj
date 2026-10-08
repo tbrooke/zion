@@ -8,8 +8,10 @@
             [com.mtzcg.history.app.admin :as app.admin]
             [com.mtzcg.history.app.auth :as app.auth]
             [com.mtzcg.history.app.home :as app.home]
+            [com.mtzcg.history.app.items :as app.items]
             [com.mtzcg.history.app.landing :as app.landing]
             [com.mtzcg.history.lib.ui :as lib.ui]
+            [com.mtzcg.history.model.seed :as model.seed]
             [com.mtzcg.history.model.sqlite :as model.sqlite]
             [com.mtzcg.history.model.user :as model.user]))
 
@@ -23,14 +25,17 @@
    (biff.graph/module)
    model.user/module
    model.sqlite/module
+   model.seed/module
    app.admin/module
    app.landing/module
    app.auth/module
-   app.home/module])
+   app.home/module
+   app.items/module])
 
 (def start-order
   [:biff.config/module
    :biff.sqlite/module
+   :history.seed/module
    :biff.admin/module
    :biff.background/module
    :biff.ring/module])

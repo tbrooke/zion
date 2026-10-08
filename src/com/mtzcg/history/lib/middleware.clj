@@ -14,3 +14,17 @@
       {:status  303
        :headers {"location" (routes/app)}}
       (handler ctx))))
+
+(defn wrap-admin
+  "Only lets through the user whose id is :biff.admin/admin-user-id."
+  [handler]
+  (fn [{:biff.admin/keys [admin-user-id] :keys [session] :as ctx}]
+    (cond
+      (nil? (:uid session))
+      {:status 303 :headers {"location" (routes/signin)}}
+
+      (not= (str (:uid session)) (str admin-user-id))
+      {:status 403 :headers {"content-type" "text/html"} :body "<h1>Forbidden</h1>"}
+
+      :else
+      (handler ctx))))

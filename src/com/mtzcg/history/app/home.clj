@@ -8,6 +8,8 @@
    request
    [:main {:class ["flex flex-1 flex-col items-center gap-4 p-8"]}
     [:h1 {:class ["text-2xl font-semibold"]} "Mt Zion History"]
+    [:a {:class ["text-blue-600 hover:underline"] :href (routes/item-new)}
+     "Add item"]
     [:a {:class ["text-blue-600 hover:underline"] :href (routes/admin)}
      "Admin dashboard"]
     [:form {:method "post" :action (routes/signout)}
