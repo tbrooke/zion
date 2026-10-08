@@ -14,3 +14,7 @@
 (defpath browse "/admin/browse")
 (defpath searches "/admin/searches")
 (defpath search-delete "/admin/searches/:id/delete")
+(defpath person-add "/admin/person-add")
+(defpath people "/admin/people")
+(defpath person "/admin/people/:id")
+(defpath person-update "/admin/people/:id/update")

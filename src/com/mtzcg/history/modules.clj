@@ -11,6 +11,7 @@
             [com.mtzcg.history.app.home :as app.home]
             [com.mtzcg.history.app.items :as app.items]
             [com.mtzcg.history.app.landing :as app.landing]
+            [com.mtzcg.history.app.people :as app.people]
             [com.mtzcg.history.lib.ui :as lib.ui]
             [com.mtzcg.history.model.seed :as model.seed]
             [com.mtzcg.history.model.sqlite :as model.sqlite]
@@ -32,7 +33,8 @@
    app.auth/module
    app.home/module
    app.items/module
-   app.browse/module])
+   app.browse/module
+   app.people/module])
 
 (def start-order
   [:biff.config/module

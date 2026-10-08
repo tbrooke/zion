@@ -1,5 +1,6 @@
 (ns com.mtzcg.history.app.items
-  (:require [clojure.string :as str]
+  (:require [cheshire.core :as json]
+            [clojure.string :as str]
             [com.biffweb.datastar :as biff.datastar :refer [signal-name]]
             [com.biffweb.sqlite :as biff.sqlite]
             [com.mtzcg.history.lib.dates :as dates]
@@ -19,6 +20,11 @@
   (biff.sqlite/execute ctx {:select   [:collection/id :collection/name :collection/category]
                             :from     :collection
                             :order-by [:collection/category :collection/name]}))
+
+(defn- all-people [ctx]
+  (biff.sqlite/execute ctx {:select   [:person/id :person/name :person/notes]
+                            :from     :person
+                            :order-by [:person/name :person/notes]}))
 
 ;;;; Form helpers ==============================================================
 
@@ -96,7 +102,86 @@
               :data-on:click "@post(el.dataset.action)"}
      "Add collection"]]])
 
-(defn- new-item-form [{:keys [item-types collections selected error]}]
+(defn- js-str [x] (json/generate-string x))
+
+(def ^:private role-options
+  [["depicted" "Depicted"]
+   ["creator" "Creator / photographer"]
+   ["recipient" "Recipient"]
+   ["contributor" "Contributor"]])
+
+(defn- person-label [{:person/keys [name notes]}]
+  (if notes (str name " — " notes) name))
+
+;; Chips are hidden until selected or matched by the filter box, so a long list
+;; of people stays out of the way. Each chip keeps its own state across
+;; re-renders (data-ignore-morph) and carries its own role.
+(defn- person-chip [{:person/keys [id] :as person}]
+  (let [id-str   (str id)
+        label    (person-label person)
+        selected (str "$item_people.includes(" (js-str id-str) ")")
+        match    (str "($person_filter.length > 0 && "
+                      (js-str (str/lower-case label))
+                      ".includes($person_filter.toLowerCase()))")]
+    [:div {:data-ignore-morph true
+           :data-show         (str selected " || " match)
+           :style             {:display "none"}
+           :class             ["inline-flex items-center gap-1"]}
+     [:label {:class ["cursor-pointer"]}
+      [:input {:type      "checkbox"
+               :class     ["peer" "sr-only"]
+               :name      "person"
+               :value     id-str
+               :data-bind (signal-name :item/people)}]
+      [:span {:class ["inline-block rounded-full border border-gray-400 px-3 py-1 text-sm"
+                      "peer-checked:border-blue-600 peer-checked:bg-blue-600"
+                      "peer-checked:text-white peer-focus-visible:ring-2"]}
+       label]]
+     [:select {:name      (str "role_" id-str)
+               :data-show selected
+               :class     ["rounded border border-gray-300 p-1 text-sm"]}
+      (for [[value text] role-options]
+        [:option {:value value} text])]]))
+
+(defn- people-picker [people]
+  [:div {:id "people-picker" :class ["flex flex-col gap-2"]}
+   [:div {:class ["text-sm font-medium"]} "People (type to find, click to tag)"]
+   [:div {:class ["flex flex-wrap items-center gap-2"]}
+    [:input {:type         "text"
+             :class        ["rounded border border-gray-300 p-2 text-sm"]
+             :placeholder  "Search people..."
+             :autocomplete "off"
+             :data-bind    (signal-name :person/filter)}]
+    [:button {:type          "button"
+              :class         ["rounded-full border border-dashed border-gray-400 px-3 py-1"
+                              "text-sm hover:bg-gray-100"]
+              :title         "New person"
+              :data-on:click "$_showAddPerson = !$_showAddPerson"}
+     "+"]]
+   [:div {:class ["flex flex-wrap items-center gap-2"]}
+    (for [person people]
+      (person-chip person))]
+   [:div {:class     ["flex flex-wrap items-end gap-2 rounded border"
+                      "border-gray-200 bg-gray-50 p-3"]
+          :data-show "$_showAddPerson"
+          :style     {:display "none"}}
+    [:label {:class [label-class]}
+     "Name"
+     [:input {:type      "text"
+              :class     ["rounded border border-gray-300 p-2"]
+              :data-bind (signal-name :person/new-name)}]]
+    [:label {:class [label-class]}
+     "Note (e.g. Pastor 1952-61)"
+     [:input {:type      "text"
+              :class     ["rounded border border-gray-300 p-2"]
+              :data-bind (signal-name :person/new-note)}]]
+    [:button {:type          "button"
+              :class         ["rounded bg-gray-800 px-3 py-2 text-sm text-white"]
+              :data-action   (routes/person-add)
+              :data-on:click "@post(el.dataset.action)"}
+     "Add person"]]])
+
+(defn- new-item-form [{:keys [item-types collections people selected error]}]
   [:form {:method  "post"
           :action  (routes/items)
           :enctype "multipart/form-data"
@@ -135,18 +220,10 @@
 
    (collection-picker collections selected)
 
+   (people-picker people)
+
    [:div {:data-ignore-morph true :class ["flex flex-col gap-5"]}
     [:div {:class ["grid gap-5 sm:grid-cols-2"]}
-     [:label {:class [label-class]}
-      "People (comma separated)"
-      [:input {:type "text" :name "people" :class [input-class]}]]
-     [:label {:class [label-class]}
-      "Their role"
-      [:select {:name "role" :class [input-class]}
-       [:option {:value "depicted"} "Depicted"]
-       [:option {:value "creator"} "Creator (author / photographer)"]
-       [:option {:value "recipient"} "Recipient"]
-       [:option {:value "contributor"} "Contributor"]]]
      [:label {:class [label-class]}
       "Subjects (comma separated)"
       [:input {:type "text" :name "subjects" :class [input-class]}]]
@@ -183,14 +260,19 @@
 
              :data-signals__ifmissing
              (biff.datastar/signals-json {:item/collections        []
+                                          :item/people             []
+                                          :person/filter           ""
+                                          :person/new-name         ""
+                                          :person/new-note         ""
                                           :collection/new-name     ""
                                           :collection/new-category ""})}
-      [:div {:data-signals__ifmissing "{_showAdd: false}"}
+      [:div {:data-signals__ifmissing "{_showAdd: false, _showAddPerson: false}"}
        [:h1 {:class ["text-2xl font-semibold"]} "Add item"]
        [:a {:class ["text-sm text-blue-600 hover:underline"] :href (routes/app)}
         "Back"]]
       (new-item-form {:item-types  (all-item-types request)
                       :collections (all-collections request)
+                      :people      (all-people request)
                       :selected    selected
                       :error       (get-in request [:params :error])})])))
 
@@ -218,6 +300,31 @@
          {:item/collections        (vec (distinct (conj selected (str id))))
           :collection/new-name     ""
           :collection/new-category ""})))))
+
+(defn add-person
+  "Creates a person (or reuses an exact name + note match) and tags them."
+  [{:biff.datastar/keys [signals] :as ctx}]
+  (let [person-name (blank->nil (:person/new-name signals))
+        note        (blank->nil (:person/new-note signals))
+        selected    (->vec (:item/people signals))]
+    (if-not person-name
+      {:status 204}
+      (let [existing (first (biff.sqlite/execute
+                             ctx {:select [:person/id]
+                                  :from   :person
+                                  :where  [:and [:= :person/name person-name]
+                                           [:= :person/notes note]]}))
+            id       (or (:person/id existing) (random-uuid))]
+        (when-not existing
+          (biff.sqlite/execute ctx {:insert-into :person
+                                    :values      [{:person/id    id
+                                                   :person/name  person-name
+                                                   :person/notes note}]}))
+        (biff.datastar/patch-signals
+         {:item/people     (vec (distinct (conj selected (str id))))
+          :person/new-name ""
+          :person/new-note ""
+          :person/filter   ""})))))
 
 (defn- name-statements
   "Find-or-create rows in `table` for each name. Returns {:ids [...] :stmts [...]}
@@ -275,7 +382,7 @@
                                   :file/position i
                                   :file/created-at now))
                          files)
-        people          (name-statements ctx :person (split-names (:people params)))
+        person-ids      (keep parse-uuid (->vec (:person params)))
         subjects        (name-statements ctx :subject (split-names (:subjects params)))
         tags            (name-statements ctx :tag (split-names (:tags params)))
         title           (or (blank->nil (:title params))
@@ -299,11 +406,17 @@
                        :item/created-at   now
                        :item/updated-at   now}]}]
       (map (fn [f] {:insert-into :file :values [f]}) stored)
-      (:stmts people) (:stmts subjects) (:stmts tags)
+      (:stmts subjects) (:stmts tags)
       (link-statements :item-collection item-id :item-collection/collection-id collections)
-      (link-statements :item-person item-id :item-person/person-id (:ids people)
-                       {:item-person/role
-                        [:lift (get roles (:role params) :item-person.role/depicted)]})
+      (map (fn [person-id]
+             (let [role (get roles (get params (keyword (str "role_" person-id))))]
+               {:insert-into :item-person
+                :values      [{:item-person/id        (random-uuid)
+                               :item-person/item-id   item-id
+                               :item-person/person-id person-id
+                               :item-person/role      [:lift (or role
+                                                                 :item-person.role/depicted)]}]}))
+           person-ids)
       (link-statements :item-subject item-id :item-subject/subject-id (:ids subjects))
       (link-statements :item-tag item-id :item-tag/tag-id (:ids tags))))
     item-id))
@@ -338,8 +451,15 @@
                           :from   :item-collection
                           :join   [:collection [:= :collection/id
                                                 :item-collection/collection-id]]
-                          :where  [:= :item-collection/item-id item-id]})]
-    (when item {:item item :files files :collections collections})))
+                          :where  [:= :item-collection/item-id item-id]})
+        people      (biff.sqlite/execute
+                     ctx {:select   [:person/id :person/name :person/notes
+                                     :item-person/role]
+                          :from     :item-person
+                          :join     [:person [:= :person/id :item-person/person-id]]
+                          :where    [:= :item-person/item-id item-id]
+                          :order-by [:item-person/role :person/name]})]
+    (when item {:item item :files files :collections collections :people people})))
 
 (defn- file-view [{:file/keys [id mime-type original-name]}]
   (let [src (routes/file id)]
@@ -354,7 +474,7 @@
       [:a {:href src :class ["text-blue-600 hover:underline"]} (or original-name "Download")])))
 
 (defn item-page [{:keys [path-params] :as request}]
-  (if-some [{:keys [item files collections]} (item-details request (:id path-params))]
+  (if-some [{:keys [item files collections people]} (item-details request (:id path-params))]
     (ui/app-page
      request
      [:main {:id "item-page" :class ["mx-auto flex w-full max-w-3xl flex-col gap-4 p-6"]}
@@ -366,6 +486,13 @@
       [:div {:class ["flex flex-wrap gap-2"]}
        (for [{:collection/keys [name]} collections]
          [:span {:class ["rounded-full bg-blue-100 px-3 py-1 text-sm"]} name])]
+      (when (seq people)
+        [:p {:class ["text-sm"]}
+         (interpose
+          ", "
+          (for [{:person/keys [id name] :keys [item-person/role]} people]
+            [:span [:a {:class ["text-blue-600 hover:underline"] :href (routes/person id)} name]
+             [:span {:class ["text-gray-500"]} " (" (clojure.core/name role) ")"]]))])
       (when-some [d (:item/description item)] [:p d])
       [:div {:class ["flex flex-wrap gap-4"]} (map file-view files)]
       [:div {:class ["flex gap-4"]}
@@ -393,4 +520,5 @@
     [(routes/items)       {:post create-item}]
     [(routes/item)        {:get item-page}]
     [(routes/collections) {:post add-collection}]
+    [(routes/person-add)  {:post add-person}]
     [(routes/file)        {:get file-handler}]]})

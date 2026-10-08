@@ -2,6 +2,8 @@
   (:require [clojure.java.io :as io]
             [dev.onionpancakes.chassis.core :as chassis]
             [com.biffweb.datastar :as biff.datastar]
+            [com.mtzcg.history.routes :as routes]
+            [clojure.string :as str]
             [ring.util.response :as ring-response]))
 
 (def default-page-opts
@@ -75,3 +77,15 @@
           "Page not found."
           "Something went wrong.")])
       (assoc :status status)))
+
+(defn item-list
+  "A list of item summaries (see lib.queries/with-collections)."
+  [items]
+  [:ul {:class ["flex flex-col divide-y rounded border"]}
+   (for [{:item/keys [id title date-display] :keys [type-name collections]} items]
+     [:li {:class ["flex flex-col gap-1 p-3"]}
+      [:a {:class ["font-medium text-blue-600 hover:underline"] :href (routes/item id)}
+       title]
+      [:div {:class ["text-sm text-gray-600"]}
+       type-name (when date-display (str " · " date-display))
+       (when (seq collections) (str " · " (str/join ", " collections)))]])])
